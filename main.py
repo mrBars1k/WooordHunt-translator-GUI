@@ -34,15 +34,26 @@ adb.commit()
 ## ## ## ## ## ## ## ##
 
 mainw = Tk() ## main window;
-mainw.title("WOORDHUNT") ## headline;
+mainw.title("WOOORDHUNT") ## headline;
 mainw.geometry("1920x1080") ## resolution;
 mainw.wm_minsize(1280, 720)  ## min width and hight;
 mainw.wm_maxsize(1920, 1080)  ## max width and hight;
 
 ## ## ## ## ## ## ## ##
+word_to_translate_lbl = Label(mainw, text="Добавить слово:", font=("Arial", 14))
+word_to_translate_lbl.place(x=50, y=20)
 
 word_to_translate = Entry(mainw, width=40, font=("Arial", 18))
 word_to_translate.place(x=50, y=50)
+
+word_to_translate.focus_set()
+
+## ## ## ## ## ## ## ##
+search_lbl = Label(mainw, text="Поиск слова:", font=("Arial", 14))
+search_lbl.place(x=650, y=10)
+
+search_entry = Entry(mainw, width=38, font=("Arial", 14))
+search_entry.place(x=780, y=10)
 
 ## ## ## ## ## ## ## ##
 
@@ -61,6 +72,28 @@ tree.heading("#3", text="Transcription")
 tree.heading("#4", text="Russian")
 
 tree.place(x=650, y=50, height=780, width=1200)
+
+## ## ## ## ## ## ## ##
+
+def search_go(event=None):
+    word_search = search_entry.get().strip()
+
+    cur.execute(f"""SELECT eng, transcription, ru FROM translations 
+    WHERE eng LIKE '%{word_search}%' OR ru LIKE '%{word_search}%'
+    ;""")
+    find_words = cur.fetchall()
+
+    count = 1
+    for i in range(len(find_words)):
+        find_words[i] = (count,) + find_words[i]
+        count += 1
+
+    for i in tree.get_children():
+        tree.delete(i)
+
+    for j in find_words:
+        tree.insert("", "end", values=j)
+
 
 ## ## ## ## ## ## ## ##
 
@@ -100,6 +133,7 @@ def delete():
     cur.execute(f"DELETE FROM translations WHERE eng = '{id_text}'")
     adb.commit()
     update_table()
+    print("Слово успешно удалено!")
 
 def show_context_menu(event):
     context_menu.post(event.x_root, event.y_root)
@@ -123,6 +157,7 @@ def update_table():
         tree.insert("", "end", values=j)
 
 word_to_translate.bind("<Return>", take_word)
+search_entry.bind("<Return>", search_go)
 tree.bind("<Button-3>", show_context_menu)
 ## ## ## ## ## ## ## ##
 update_table()
