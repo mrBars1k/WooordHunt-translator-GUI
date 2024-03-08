@@ -31,6 +31,15 @@ cur.execute("""CREATE TABLE IF NOT EXISTS translations (
 );""")
 adb.commit()
 
+## ##
+
+cur.execute("""CREATE TABLE IF NOT EXISTS basket (
+                eng varchar(400),
+                transcription varchar(400),
+                ru varchar(400)
+                );""")
+adb.commit()
+
 ## ## ## ## ## ## ## ##
 
 mainw = Tk() ## main window;
@@ -134,6 +143,8 @@ def delete():
     else:
         item = tree.selection()[0]
         eng_word = tree.item(item, "values")[1]
+        trans_word = tree.item(item, "values")[2]
+        ru_word = tree.item(item, "values")[3]
 
         popup2 = Toplevel() ## delete window instance;
         popup2.title("Delete menu:")
@@ -156,6 +167,9 @@ def delete():
         button_frame.pack(pady=20)
 
         def del_tag():  ## remove tag and close a window;
+            cur.execute(f"""INSERT INTO basket (eng, transcription, ru) VALUES 
+            ('{eng_word}', '{trans_word}', '{ru_word}');""")
+
             cur.execute(f"DELETE FROM translations WHERE eng = '{eng_word}'")
             adb.commit()
             popup2.destroy()
