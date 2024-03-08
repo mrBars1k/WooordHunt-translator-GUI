@@ -37,7 +37,7 @@ mainw = Tk() ## main window;
 mainw.title("WOOORDHUNT") ## headline;
 mainw.geometry("1920x1080") ## resolution;
 mainw.wm_minsize(1280, 720)  ## min width and hight;
-mainw.wm_maxsize(1920, 1080)  ## max width and hight;
+mainw.wm_maxsize(1910, 1080)  ## max width and hight;
 
 ## ## ## ## ## ## ## ##
 word_to_translate_lbl = Label(mainw, text="Добавить слово:", font=("Arial", 14))
@@ -127,19 +127,92 @@ def take_word(event=None):
 ## ## ## ## ## ## ## ##
 
 def delete():
-    item = tree.selection()[0]
-    id_text = tree.item(item, "values")[1]
+    item = tree.selection() ## selected cell in table;
 
-    cur.execute(f"DELETE FROM translations WHERE eng = '{id_text}'")
-    adb.commit()
-    update_table()
-    print("Слово успешно удалено!")
+    if item == ():
+        pass ## if not selected item;
+    else:
+        item = tree.selection()[0]
+        id_text = tree.item(item, "values")[1] ## id from table;
+
+        popup2 = Toplevel() ## delete window instance;
+        popup2.title("Delete menu:")
+
+        screen_width = mainw.winfo_screenwidth()
+        screen_height = mainw.winfo_screenheight()
+
+        popup_width = 440
+        popup_height = 190
+
+        popup2.geometry("{}x{}+{}+{}".format(popup_width, popup_height, 900, 140))
+
+        frame = Frame(popup2)
+        frame.pack(expand=True, fill='both')
+
+        confirm_lbl = Label(frame, text=f'Are you sure you want to remove the word\n<{id_text}>?', font=("Arial", 14))
+        confirm_lbl.pack(pady=10)
+
+        button_frame = Frame(frame)
+        button_frame.pack(pady=20)
+
+        def del_tag():  ## remove tag and close a window;
+            cur.execute(f"DELETE FROM translations WHERE eng = '{id_text}'")
+            adb.commit()
+            popup2.destroy()
+            update_table()
+            print("Слово успешно удалено!")
+
+        def on_no(): ## close the window;
+            popup2.destroy()
+
+        yes_confirm = Button(button_frame, text='YES', width=15, height=1, command=del_tag)
+        yes_confirm.pack(side='left', padx=10, pady=20)
+
+        no_confirm = Button(button_frame, text='NO', width=15, height=1, command=on_no)
+        no_confirm.pack(side='right', padx=10, pady=20)
+
+## ## ## ## ## ## ## ##
+
+def description_window():
+    item = tree.selection() ## selected cell in table;
+
+    if item == ():
+        pass ## if not selected item;
+    else:
+
+        popup = Toplevel()  ## tag change window instance;
+        popup.title("Menu:")
+
+        screen_width = mainw.winfo_screenwidth()
+        screen_height = mainw.winfo_screenheight()
+
+        popup_width = 800
+        popup_height = 250
+        x_position = (screen_width - popup_width) // 2
+        y_position = (screen_height - popup_height) // 2
+
+        popup.geometry("{}x{}+{}+{}".format(popup_width, popup_height, x_position, y_position))
+
+        eng_entry = Entry(popup, width=70, font=("Arial", 14))
+        transcription_entry = Entry(popup, width=70, font=("Arial", 14))
+        ru_entry = Entry(popup, width=70, font=("Arial", 14))
+
+        eng_entry.place(x=10, y=10)
+        transcription_entry.place(x=10, y=60)
+        ru_entry.place(x=10, y=110)
+
+        confirm_change_btn = Button(popup, text="Confirm", font=("Arial", 14), width=12)
+        confirm_change_btn.place(x=340, y=170)
+
+## ## ## ## ## ## ## ##
 
 def show_context_menu(event):
     context_menu.post(event.x_root, event.y_root)
 
 context_menu = Menu(mainw, tearoff=0)
 context_menu.add_command(label="Удалить", command=delete)
+context_menu.add_command(label="Изменить", command=description_window)
+
 ## ## ## ## ## ## ## ##
 
 def update_table():
@@ -155,6 +228,8 @@ def update_table():
 
     for j in all_info:
         tree.insert("", "end", values=j)
+
+## ## ## ## ## ## ## ##
 
 word_to_translate.bind("<Return>", take_word)
 search_entry.bind("<Return>", search_go)
