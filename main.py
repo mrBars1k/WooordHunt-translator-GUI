@@ -21,6 +21,17 @@ cur = adb.cursor()
 
 ## ## ## ## ## ## ## ##
 
+cur.execute("""CREATE TABLE IF NOT EXISTS translations (
+    id bigserial PRIMARY KEY,
+    eng varchar(400) NOT NULL UNIQUE,
+    transcription varchar(400) NOT NULL UNIQUE,
+    ru varchar(400) NOT NULL UNIQUE,
+    date timestamp DEFAULT CURRENT_TIMESTAMP(1) NOT NULL
+);""")
+adb.commit()
+
+## ## ## ## ## ## ## ##
+
 def take_word(word):
     url = requests.get(f"https://wooordhunt.ru/word/{word}", verify=False)
     resp_check = url.text
@@ -46,6 +57,16 @@ mainw.wm_maxsize(1920, 1080)  ## max width and hight;
 
 ## ## ## ## ## ## ## ##
 
+word_to_translate = Entry(mainw, width=40, font=("Arial", 18))
+word_to_translate.place(x=50, y=50)
+
+def translate():
+    need = word_to_translate.get()
+
+    cur.execute("")
+
+trans_btn = Button(mainw, text="GO", width=10, command=translate)
+trans_btn.place(x=100, y=100)
 
 
 ## ## ## ## ## ## ## ##
