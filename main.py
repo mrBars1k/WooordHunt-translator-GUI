@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import urllib3
-
 from tkinter import *
 from tkinter import ttk
 import psycopg2
@@ -9,6 +8,7 @@ from psycopg2 import sql
 from tk import *
 
 ## ## ## ## ## ## ## ##
+
 urllib3.disable_warnings()
 
 adb = psycopg2.connect(
@@ -88,8 +88,7 @@ def search_go(event=None):
     word_search = search_entry.get().strip()
 
     cur.execute(f"""SELECT eng, transcription, ru FROM translations 
-    WHERE eng LIKE '%{word_search}%' OR ru LIKE '%{word_search}%'
-    ;""")
+    WHERE eng LIKE '%{word_search}%' OR ru LIKE '%{word_search}%';""")
     find_words = cur.fetchall()
 
     count = 1
@@ -102,7 +101,6 @@ def search_go(event=None):
 
     for j in find_words:
         tree.insert("", "end", values=j)
-
 
 ## ## ## ## ## ## ## ##
 
@@ -127,11 +125,10 @@ def take_word(event=None):
         adb.commit()
         word_to_translate.delete(0, END) ## clear field;
         update_table()
-        print("Перевод успешно добавлен!")
+
     except:
         update_table()
         adb.rollback()
-        print("Слово не найдено!")
 
 ## ## ## ## ## ## ## ##
 
@@ -166,15 +163,15 @@ def delete():
         button_frame = Frame(frame)
         button_frame.pack(pady=20)
 
-        def del_tag():  ## remove tag and close a window;
+        def del_tag():  ## remove word and close the window;
             cur.execute(f"""INSERT INTO basket (eng, transcription, ru) VALUES 
             ('{eng_word}', '{trans_word}', '{ru_word}');""")
 
             cur.execute(f"DELETE FROM translations WHERE eng = '{eng_word}'")
             adb.commit()
+
             popup2.destroy()
             update_table()
-            print("Слово успешно удалено!")
 
         def on_no(): ## close the window;
             popup2.destroy()
@@ -196,7 +193,7 @@ def description_window():
         item = tree.selection()[0]
         all_word_info = tree.item(item, "values")
 
-        popup = Toplevel()  ## tag change window instance;
+        popup = Toplevel()  ## word change window instance;
         popup.title("Menu:")
 
         screen_width = mainw.winfo_screenwidth()
@@ -243,8 +240,8 @@ def show_context_menu(event):
     context_menu.post(event.x_root, event.y_root)
 
 context_menu = Menu(mainw, tearoff=0)
-context_menu.add_command(label="Удалить", command=delete)
 context_menu.add_command(label="Изменить", command=description_window)
+context_menu.add_command(label="Удалить", command=delete)
 
 ## ## ## ## ## ## ## ##
 
@@ -267,6 +264,7 @@ def update_table():
 word_to_translate.bind("<Return>", take_word)
 search_entry.bind("<Return>", search_go)
 tree.bind("<Button-3>", show_context_menu)
+
 ## ## ## ## ## ## ## ##
 update_table()
 mainw.mainloop()
