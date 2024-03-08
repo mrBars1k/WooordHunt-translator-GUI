@@ -111,9 +111,9 @@ def take_word(event=None):
         ).text
 
         cur.execute(f"""INSERT INTO translations (eng, transcription, ru) VALUES (
-                        '{word}', 
-                        '{transcript.replace('|', '[', 1).replace('|', ']', 1)}', 
-                        '{translate}'
+                        '{word.strip()}', 
+                        '{transcript.replace('|', '[', 1).replace('|', ']', 1).strip()}', 
+                        '{translate.strip()}'
                     )""")
         adb.commit()
         word_to_translate.delete(0, END) ## clear field;
@@ -133,7 +133,7 @@ def delete():
         pass ## if not selected item;
     else:
         item = tree.selection()[0]
-        id_text = tree.item(item, "values")[1] ## id from table;
+        eng_word = tree.item(item, "values")[1]
 
         popup2 = Toplevel() ## delete window instance;
         popup2.title("Delete menu:")
@@ -149,14 +149,14 @@ def delete():
         frame = Frame(popup2)
         frame.pack(expand=True, fill='both')
 
-        confirm_lbl = Label(frame, text=f'Are you sure you want to remove the word\n<{id_text}>?', font=("Arial", 14))
+        confirm_lbl = Label(frame, text=f'Are you sure you want to remove the word\n<{eng_word}>?', font=("Arial", 14))
         confirm_lbl.pack(pady=10)
 
         button_frame = Frame(frame)
         button_frame.pack(pady=20)
 
         def del_tag():  ## remove tag and close a window;
-            cur.execute(f"DELETE FROM translations WHERE eng = '{id_text}'")
+            cur.execute(f"DELETE FROM translations WHERE eng = '{eng_word}'")
             adb.commit()
             popup2.destroy()
             update_table()
@@ -179,6 +179,8 @@ def description_window():
     if item == ():
         pass ## if not selected item;
     else:
+        item = tree.selection()[0]
+        all_word_info = tree.item(item, "values")
 
         popup = Toplevel()  ## tag change window instance;
         popup.title("Menu:")
@@ -201,7 +203,24 @@ def description_window():
         transcription_entry.place(x=10, y=60)
         ru_entry.place(x=10, y=110)
 
-        confirm_change_btn = Button(popup, text="Confirm", font=("Arial", 14), width=12)
+        eng_entry.insert(0, f"{all_word_info[1]}")
+        transcription_entry.insert(0, f"{all_word_info[2]}")
+        ru_entry.insert(0, f"{all_word_info[3]}")
+
+        def change_word():
+            en = eng_entry.get()
+            trans = transcription_entry.get()
+            ru = ru_entry.get()
+
+            cur.execute(f"""UPDATE translations SET 
+                        eng = '{en}',
+                        transcription = '{trans}',
+                        ru = '{ru}'
+                        WHERE eng = '{all_word_info[1]}'""")
+            adb.commit()
+            update_table()
+
+        confirm_change_btn = Button(popup, text="Confirm", font=("Arial", 14), width=12, command=change_word)
         confirm_change_btn.place(x=340, y=170)
 
 ## ## ## ## ## ## ## ##
@@ -216,7 +235,7 @@ context_menu.add_command(label="Изменить", command=description_window)
 ## ## ## ## ## ## ## ##
 
 def update_table():
-    cur.execute("SELECT eng, transcription, ru FROM translations;")
+    cur.execute("SELECT eng, transcription, ru FROM translations ORDER BY eng ASC;")
     all_info = cur.fetchall()
     count = 1
     for i in range(len(all_info)):
